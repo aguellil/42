@@ -6,7 +6,7 @@
 /*   By: aguellil <aguellil@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/02/28 13:13:34 by aguellil          #+#    #+#             */
-/*   Updated: 2017/02/28 21:11:21 by aguellil         ###   ########.fr       */
+/*   Updated: 2017/03/01 00:50:32 by aguellil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,7 +107,8 @@ int		ft_rpn_calculate(int n1, int n2, char op, int *aresult)
 int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aresult)
 {
 	int		nb_args;
-	char	t;
+	char	t1;
+	char	t2;
 	int		n1;
 	int		n2;
 	char	op;
@@ -130,15 +131,13 @@ int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aresult)
 	}
 	if (nb_args > 3)
 	{
-		t = ft_rpn_typeof_arg_no(rpn, start + 2);
-		error = ft_rpn_calc_recursive(rpn, start, start + 2 * (t == 'o'), &n1);
-		error = error || ft_rpn_calc_recursive(rpn, start + 3 * (t == 'o') + (t == 'n'), end - 1, &n2);
+		t1 = ft_rpn_typeof_arg_no(rpn, start + 2);
+		t2 = ft_rpn_typeof_arg_no(rpn, end - 1);
+		error = ft_rpn_calc_recursive(rpn, start, (start + 2 * (t1 == 'o')) * (t2 == 'o') + (end - 2) * (t2 == 'n'), &n1);
+		error = error || ft_rpn_calc_recursive(rpn, (start + 2 * (t1 == 'o')) * (t2 == 'o') + (end - 2) * (t2 == 'n') + 1, end - 1, &n2);
 		op = *(ft_rpn_reach_arg_no(rpn, end));
 		if (error == 0)
-		{
 			ft_rpn_calculate(n1, n2, op, aresult);
-			printf("%d\n", *aresult);
-		}
 	}
 	return (error);
 }

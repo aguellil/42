@@ -6,7 +6,7 @@
 /*   By: aguellil <aguellil@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/02/28 13:13:34 by aguellil          #+#    #+#             */
-/*   Updated: 2017/02/28 18:12:54 by aguellil         ###   ########.fr       */
+/*   Updated: 2017/02/28 21:11:21 by aguellil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,6 @@ int		ft_rpn_nb_args(char *rpn)
 
 	if (rpn == 0)
 		return (-1);
-	if (*rpn == 0)
-		return (0);
 	nb_args = 0;
 	if (!ft_char_is_dl(*rpn))
 		nb_args++;
@@ -89,60 +87,60 @@ char	ft_rpn_typeof_arg_no(char *rpn, int no)
 	return ('n');
 }
 
-int		ft_rpn_calculate(int n1, int n2, char op, int *aerror)
+int		ft_rpn_calculate(int n1, int n2, char op, int *aresult)
 {
+	if (aresult == 0)
+		return (-1);
 	if (op == '+')
-		return (n1 + n2);
+		*aresult = n1 + n2;
 	if (op == '-')
-		return (n1 - n2);
+		*aresult = n1 - n2;
 	if (op == '*')
-		return (n1 * n2);
+		*aresult = n1 * n2;
 	if (op == '/' && n2 != 0)
-		return (n1 / n2);
+		*aresult = n1 / n2;
 	if (op == '%' && n2 != 0)
-		return (n1 % n2);
-	*aerror = 1;
+		*aresult = n1 % n2;
 	return (0);
 }
 
-int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aerror)
+int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aresult)
 {
 	int		nb_args;
-	char	type;
+	char	t;
+	int		n1;
+	int		n2;
+	char	op;
+	int		error;
 
+	error = 0;
 	nb_args = end - start + 1;
-	if (rpn == 0 || *rpn == 0 || start <= 0 || end <= 0 || start > end || \
-		aerror == 0 || *aerror != 0 || (nb_args < 3 && nb_args != 1) || \
-		ft_rpn_typeof_arg_no(rpn, start) != 'n' || \
-		(nb_args != 1 && ft_rpn_typeof_arg_no(rpn, end) != 'o'))
-	{
-		*aerror = -1;
-		return (0);
-	}
+	if (rpn == 0 || *rpn == 0 || start <= 0 || end <= 0 || \
+		(nb_args < 3 && nb_args != 1) || \
+		(nb_args == 1 && ft_rpn_typeof_arg_no(rpn, start) != 'n') || \
+		(nb_args >= 3 && (ft_rpn_typeof_arg_no(rpn, start) != 'n' || ft_rpn_typeof_arg_no(rpn, start + 1) != 'n' || ft_rpn_typeof_arg_no(rpn, end) != 'o')))
+		return (1);
 	if (nb_args == 1)
-		return (atoi(ft_rpn_reach_arg_no(rpn, start)));
+		*aresult = atoi(ft_rpn_reach_arg_no(rpn, start));
 	if (nb_args == 3)
-		return (ft_rpn_calculate(ft_rpn_reach_arg_no(start), \
-								 atoi(ft_rpn_reach_arg_no(start + 1)), \
-								 *(ft_rpn_reach_arg_no(start + 2)))
-	if (ft_rpn_typeof_arg_no(rpn, start + 2) == 'o')
 	{
-		return (ft_rpn_calculate(\
-					ft_rpn_calc_recursive(rpn, start, start + 2, aerror), \
-					ft_rpn_calc_recursive(rpn, start + 3, end - 1, aerror), \
-					*(ft_rpn_reach_arg_no(rpn, end)), \
-					aerror));
+		ft_rpn_calculate(atoi(ft_rpn_reach_arg_no(rpn, start)), \
+						atoi(ft_rpn_reach_arg_no(rpn, start + 1)), \
+						*ft_rpn_reach_arg_no(rpn, start + 2), aresult);
 	}
-	if (ft_rpn_typeof_arg_no(rpn, start + 2) == 'n')
+	if (nb_args > 3)
 	{
-		return (ft_rpn_calculate(\
-					ft_rpn_calc_recursive(rpn, start, start, aerror), \
-					ft_rpn_calc_recursive(rpn, start + 1, end - 1, aerror), \
-					*(ft_rpn_reach_arg_no(rpn, end)), \
-					aerror));
+		t = ft_rpn_typeof_arg_no(rpn, start + 2);
+		error = ft_rpn_calc_recursive(rpn, start, start + 2 * (t == 'o'), &n1);
+		error = error || ft_rpn_calc_recursive(rpn, start + 3 * (t == 'o') + (t == 'n'), end - 1, &n2);
+		op = *(ft_rpn_reach_arg_no(rpn, end));
+		if (error == 0)
+		{
+			ft_rpn_calculate(n1, n2, op, aresult);
+			printf("%d\n", *aresult);
+		}
 	}
-	*aerror = 1;
-	return (0);
+	return (error);
 }
 
 int		main(int argc, char **argv)
@@ -155,7 +153,7 @@ int		main(int argc, char **argv)
 	if (argc != 2)
 		error = 1;
 	else
-		result = ft_rpn_calc_recursive(*(argv + 1), 1, ft_rpn_nb_args(*(argv + 1)), &error);
+		error = ft_rpn_calc_recursive(*(argv + 1), 1, ft_rpn_nb_args(*(argv + 1)), &result);
 	if (error != 0)
 		printf("%s\n", "Error");
 	else

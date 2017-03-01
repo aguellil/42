@@ -6,7 +6,7 @@
 /*   By: aguellil <aguellil@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2017/02/28 13:13:34 by aguellil          #+#    #+#             */
-/*   Updated: 2017/03/01 00:50:32 by aguellil         ###   ########.fr       */
+/*   Updated: 2017/03/01 11:01:00 by aguellil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,59 +87,82 @@ char	ft_rpn_typeof_arg_no(char *rpn, int no)
 	return ('n');
 }
 
-int		ft_rpn_calculate(int n1, int n2, char op, int *aresult)
+int		ft_rpn_is_valid(char *rpn, int start, int end)
 {
-	if (aresult == 0)
-		return (-1);
+	int		nb_args;
+	int		cpt;
+	int		k;
+	char	t;
+
+	nb_args = end - start + 1;
+	if (rpn == 0 || *rpn == 0 || start <= 0 || end <= 0 || \
+		start > end || nb_args <= 0 || nb_args == 2)
+		return (0);
+	cpt = (ft_rpn_typeof_arg_no(rpn, start) == 'n');
+	k = start + 1;
+	while (k <= end && cpt > 0)
+	{
+		t = ft_rpn_typeof_arg_no(rpn, k);
+		if (t != 'n' && t != 'o')
+			return (0);
+		cpt = cpt + (t == 'n') - (t == 'o');
+		k++;
+	}
+	return (cpt == 1);
+}
+
+int		ft_rpn_calculate(int n1, int n2, char op, int *aerror)
+{
+	if (aerror == 0 || *aerror == 1)
+		return (0);
 	if (op == '+')
-		*aresult = n1 + n2;
+		return (n1 + n2);
 	if (op == '-')
-		*aresult = n1 - n2;
+		return (n1 - n2);
 	if (op == '*')
-		*aresult = n1 * n2;
+		return (n1 * n2);
 	if (op == '/' && n2 != 0)
-		*aresult = n1 / n2;
+		return (n1 / n2);
 	if (op == '%' && n2 != 0)
-		*aresult = n1 % n2;
+		return (n1 % n2);
+	*aerror = 1;
 	return (0);
 }
 
-int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aresult)
+int		ft_rpn_calc_recursive(char *rpn, int start, int end, int *aerror)
 {
 	int		nb_args;
-	char	t1;
-	char	t2;
-	int		n1;
-	int		n2;
-	char	op;
-	int		error;
+	int		k;
 
-	error = 0;
+	if (aerror == 0 || *aerror == 1)
+		return (0);
+	if (!ft_rpn_is_valid(rpn, start, end))
+	{
+		*aerror = 1;
+		return (0);
+	}
 	nb_args = end - start + 1;
-	if (rpn == 0 || *rpn == 0 || start <= 0 || end <= 0 || \
-		(nb_args < 3 && nb_args != 1) || \
-		(nb_args == 1 && ft_rpn_typeof_arg_no(rpn, start) != 'n') || \
-		(nb_args >= 3 && (ft_rpn_typeof_arg_no(rpn, start) != 'n' || ft_rpn_typeof_arg_no(rpn, start + 1) != 'n' || ft_rpn_typeof_arg_no(rpn, end) != 'o')))
-		return (1);
 	if (nb_args == 1)
-		*aresult = atoi(ft_rpn_reach_arg_no(rpn, start));
+		return (atoi(ft_rpn_reach_arg_no(rpn, start)));
 	if (nb_args == 3)
 	{
-		ft_rpn_calculate(atoi(ft_rpn_reach_arg_no(rpn, start)), \
-						atoi(ft_rpn_reach_arg_no(rpn, start + 1)), \
-						*ft_rpn_reach_arg_no(rpn, start + 2), aresult);
+		return (ft_rpn_calculate(atoi(ft_rpn_reach_arg_no(rpn, start)), \
+				atoi(ft_rpn_reach_arg_no(rpn, start + 1)), \
+				*ft_rpn_reach_arg_no(rpn, start + 2), aerror));
 	}
 	if (nb_args > 3)
 	{
-		t1 = ft_rpn_typeof_arg_no(rpn, start + 2);
-		t2 = ft_rpn_typeof_arg_no(rpn, end - 1);
-		error = ft_rpn_calc_recursive(rpn, start, (start + 2 * (t1 == 'o')) * (t2 == 'o') + (end - 2) * (t2 == 'n'), &n1);
-		error = error || ft_rpn_calc_recursive(rpn, (start + 2 * (t1 == 'o')) * (t2 == 'o') + (end - 2) * (t2 == 'n') + 1, end - 1, &n2);
-		op = *(ft_rpn_reach_arg_no(rpn, end));
-		if (error == 0)
-			ft_rpn_calculate(n1, n2, op, aresult);
+		k = 0;
+		while (!ft_rpn_is_valid(rpn, start, start + k) || \
+				!ft_rpn_is_valid(rpn, start + k + 1, end - 1))
+			k++;
+		return (ft_rpn_calculate(\
+				ft_rpn_calc_recursive(rpn, start, start + k, aerror), \
+				ft_rpn_calc_recursive(rpn, start + k + 1, end - 1, aerror), \
+				*ft_rpn_reach_arg_no(rpn, end), \
+				aerror));
 	}
-	return (error);
+	return (0);
 }
 
 int		main(int argc, char **argv)
@@ -152,7 +175,7 @@ int		main(int argc, char **argv)
 	if (argc != 2)
 		error = 1;
 	else
-		error = ft_rpn_calc_recursive(*(argv + 1), 1, ft_rpn_nb_args(*(argv + 1)), &result);
+		result = ft_rpn_calc_recursive(*(argv + 1), 1, ft_rpn_nb_args(*(argv + 1)), &error);
 	if (error != 0)
 		printf("%s\n", "Error");
 	else

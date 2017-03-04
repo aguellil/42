@@ -1,0 +1,2 @@
+select_best_move
+	minimax

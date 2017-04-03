@@ -6,7 +6,7 @@
 #    By: aguellil <aguellil@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2017/03/18 10:51:23 by aguellil          #+#    #+#              #
-#    Updated: 2017/03/31 17:08:40 by aguellil         ###   ########.fr        #
+#    Updated: 2017/04/02 03:34:31 by aguellil         ###   ########.fr        #
 #                                                                              #
 #******************************************************************************#
 
@@ -19,14 +19,14 @@ COMPILER_NAME = gcc
 COMPILER_FLAGS = -Wall -Wextra -Werror
 
 # Headers
-HEADERS_DIRECTORY = Headers
-HEADERS_FLAGS = -I./$(HEADERS_DIRECTORY)
+HEADERS_DIRECTORY = .
+HEADERS_FLAGS = -I$(HEADERS_DIRECTORY) \
+				-I$(LIBRARIES_DIRECTORY)/libft/
 
 # Libraries
-LIBRARIES_DIRECTORY = Libraries
-LIBRARIES_NAMES = libft.a libglfw3.a
-LIBRARIES_FLAGS	= -L./$(LIBRARIES_DIRECTORY)/libft/ \
-				-L./$(LIBRARIES_DIRECTORY)/glfw/src/ \
+LIBRARIES_DIRECTORY = .
+LIBRARIES_NAMES = libft.a
+LIBRARIES_FLAGS	= -L$(LIBRARIES_DIRECTORY)/libft/ \
 				$(subst lib,-l,$(patsubst %.a,%,$(LIBRARIES_NAMES)))
 
 # Objects
@@ -36,14 +36,21 @@ OBJECTS_PATHS = $(patsubst %,$(OBJECTS_DIRECTORY)/%,$(OBJECTS_NAMES))
 
 # Platform
 PLATFORM_NAME = macos
-PLATFORM_FLAGS = ''
-MACOS_FLAGS = -framework Cocoa -framework CoreVideo \
-			-framework IOKit -framework OpenGL -framework GLUT
+PLATFORM_FLAGS = $(MACOS_FLAGS)
+MACOS_FLAGS = ''
 LINUX_FLAGS = ''
 
 # Sources
-SOURCES_DIRECTORY = Sources
-SOURCES_NAMES = 
+SOURCES_DIRECTORY = .
+SOURCES_NAMES = alum1.c \
+				ai.c \
+				human.c \
+				input.c \
+				error.c \
+				parser.c \
+				play.c \
+				print.c \
+				tools.c
 SOURCES_PATHS = $(patsubst %,$(SOURCES_DIRECTORY)/%,$(SOURCES_NAMES))
 
 # Target
@@ -60,15 +67,18 @@ $(OBJECTS_DIRECTORY)/%.o: $(SOURCES_DIRECTORY)/%.c
 	@$(COMPILER_NAME) $(COMPILER_FLAGS) $(HEADERS_FLAGS) -c $< -o $@;
 
 clean:
+	@make clean -C $(LIBRARIES_DIRECTORY)/libft/;
 	@/bin/rm -rf $(OBJECTS_DIRECTORY);
 
 fclean: clean
+	@make fclean -C $(LIBRARIES_DIRECTORY)/libft/;
 	@/bin/rm -f $(NAME);
 
-macos: linux
-
-linux:
-
 re: fclean all
+
+macos:
+	@make -C $(LIBRARIES_DIRECTORY)/libft;
+
+linux: macos
 
 .PHONY: all clean fclean re macos linux

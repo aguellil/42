@@ -1,0 +1,12 @@
+# Tries to retrieve the rush directory from any current working subdirectory
+# If we're not in a subdirectory of the rush directory , the rush directory 
+# has '' for path
+script exec("import lldb,os;\nrdap = os.getcwd();\nwhile not(rdap == '/' or os.path.isfile(rdap+'/00-init/.lldbinit') or os.path.isfile(rdap+'/01-usage/commandes') or os.path.isfile(rdap+'/02-script/reverse.py')):\n\trdap = os.path.abspath(os.path.join(rdap, os.pardir));\nrdap = rdap * bool(not(rdap == '/'));\n")
+
+# Imports the Part III script file for general purposes, but only if we are in
+# the rush directory; otherwise, does nothing. To do the different parts of the 
+# subject, we chose not to create any other files than those who are listed 
+script exec("if not(rdap == ''):\n\tlldb.debugger.HandleCommand('command script import '+rdap+'/02-script/reverse.py');\n");
+
+# Execution of Part I (only if we are in the rush directory)
+script exec("if not(rdap == ''):\n\tlldb.debugger.HandleCommand('Part_I')\n");

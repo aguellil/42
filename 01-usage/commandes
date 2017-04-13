@@ -1,0 +1,31 @@
+# Subject's Initial Commands
+breakpoint set --name main
+process launch
+
+# Repair Commands
+breakpoint set --line 28
+breakpoint command add 2
+register write rsi `&tab[count] - 1`
+process continue
+DONE
+thread until 31
+expression count = 0
+breakpoint set --line 42
+process continue
+expression max = -max
+expression int $var = min[0]
+breakpoint set --line 43
+breakpoint command add 4
+expression max += 2
+expression min[0] = min[i]
+process continue
+DONE
+breakpoint set --line 53
+process continue
+expression biggest = $var
+breakpoint set --line 55
+breakpoint command add 6
+expression min[0] = min[i]
+process continue
+DONE
+process continue

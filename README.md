@@ -1,2 +1,5 @@
 # C_Exam_Beginner
-To do
+## Subject
+## Solution
+### Method 1
+### Method 2
